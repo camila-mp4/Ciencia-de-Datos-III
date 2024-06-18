@@ -9,15 +9,16 @@ from sklearn.metrics import auc
 from scipy.stats import chi2
 
 class TrainTest():
-  """Separa conjunto de datos en conjunto train y test.
+  ''' Esta clase separa un conjunto de datos en formato Dataframe en conjuntos
+  para entrenar y testear. El conjunto train contiene un porcentaje p de los datos,
+  test contiene el 1 - p restantes.
+  Argumentos:
+  - data: conjunto de datos,
+  - p: porcentaje de datos para conjunto train,
+  - semilla: opcional, permite definir la semilla de selección de datos.
+  '''
+  def __init__(self, data, p, semilla = 10):
 
-  Args:
-      data (pd.Dataframe): conjunto de datos a separar
-      p (float): porcentaje de datos para conjunto train. 0 < p < 1.
-      semilla (int): opcional, permite definir la semilla de selección de datos.
-  """
-  def __init__(self, data: pd.DataFrame, p:float, semilla:int = 10):
-    """Inicializa instancia de la clase TrainTest."""
     random.seed(semilla)
 
     self.indices = random.sample(range(len(data)), int(len(data) * p))
@@ -25,55 +26,42 @@ class TrainTest():
     self.train = data.iloc[self.indices]
     self.test = data.drop(self.indices)
 
-  def train(self) -> pd.DataFrame:
-    """Devuelve conjunto train."""
+  def train(self):
     return self.train
 
-  def test(self) -> pd.DataFrame:
-    """Devuelve conjunto test."""
+  def test(self):
     return self.test
 
 class Regresion():
-  """Realiza cálculos de regresión con librería statmodels.
-
-    Atributos:
-        x (np.ndarray): vector de observaciones de la variable predictora.
-        y (np.ndarray): vector de observaciones de la variable respuesta.
-        X (np.ndarray): matriz de diseño asociada a x."""
 
   def __init__(self, predictoras, respuesta):
-    """Inicializa instancia de clase regresión."""
     self.x = predictoras
     self.y = respuesta
     self.X = sm.add_constant(self.x)
 
-  def valores_ajustados(self) -> np.ndarray:
-    """Devuelve los valores ajustados del modelo de regresión."""
+  def valores_ajustados(self):
     return self.resultado.fittedvalues
 
-  def betas(self) -> np.ndarray:
-    """Devuelve las estimaciones de los parámetros asociados a cada predictora."""
+  def betas(self):
     return self.resultado.params
 
-  def se(self) -> np.ndarray:
-    """Devuelve los errores estándar asociados a cada beta estimado."""
+  def se(self):
     return self.resultado.bse
 
-  def t_obs(self) -> np.ndarray:
-    """Devuelve el estadístico t observado para cada beta estimado."""
+  def t_obs(self):
     return self.resultado.tvalues
 
-  def pvalues(self) -> np.ndarray:
-    """Devuelve el p-valor asociado a cada beta estimado."""
+  def pvalues(self):
     return self.resultado.pvalues
 
+
 class RegresionLineal(Regresion):
-  """Esta clase es una instancia de la clase Regresion y realiza cálculos y gráficos de regresión lineal
+  '''Esta clase es una instancia de la clase Regresion y realiza cálculos y gráficos de regresión lineal
   utilizando las librerías numpy, statsmodels y matplotlib.
 
   Atributos:
   - Modelo (sm.OLS): Modelo de regresión lineal.
-  - """
+  - '''
 
   def __init__(self, predictoras: np.ndarray, respuesta: np.ndarray):
     """ Inicializa una instancia de la clase Regresión Lineal con la librería
@@ -87,7 +75,7 @@ class RegresionLineal(Regresion):
     self.modelo = sm.OLS(self.y, self.X)
     self.resultado = self.modelo.fit()
 
-  def coeficientes_correlacion(self):
+  def coeficientes_correlacion(self) -> np.ndarray:
     """ Devuelve los coeficientes de correlación entre cada variable predictora
     y la variable respuesta.
 
@@ -129,27 +117,21 @@ class RegresionLineal(Regresion):
         plt.plot(self.x, self.valores_ajustados())
         plt.show()
 
+  def ECM(self):
+    '''Devuelve el Error Cuadrático Medio del modelo ajustado.'''
+    error_cuadratico_medio = np.sum((self.y - self.valores_ajustados())**2) / len(self.y)
+    return error_cuadratico_medio
+
   def predecir_valor(self, x_new):
-    """Predice el valor  de la variable respuesta asociado a nuevos valores
+    '''Predice el valor  de la variable respuesta asociado a nuevos valores
     de las variables predictoras.
       Args:
             x_new: vector de variables predictoras.
       Returns:
             np.ndarray: predicciones
-    """
+    '''
     X_new = np.insert(x_new, 0, 1)
     return X_new @ self.betas()
-
-  def ECM(self, x_test: np.ndarray, y_test:np.ndarray) -> float:
-    """Devuelve el error cuadrático medio asociado a una muestra testeo.
-    Args:
-        x_test (np.ndarray): predictoras para testear.
-        y_test (np.ndarray): valores de la variable respuesta para testear.
-
-    Returns:
-        float"""
-    error_cuadratico_medio = np.sum((y_test - self.predecir_valor(x_test))**2) / len(self.y)
-    return error_cuadratico_medio
 
   def intervalos(self, x_new, alfa=0.05, mostrar = True):
     '''Devuelve intervalos de confianza y de predicción para un valor
@@ -262,5 +244,3 @@ class RegresionLogistica(Regresion):
       print('Modelo excelente.')
 
     return curva_ROC, AUC
-
-"""HOLA ESTOY CAMBIANDO ALGO"""
