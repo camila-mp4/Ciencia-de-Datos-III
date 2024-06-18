@@ -72,30 +72,30 @@ Q3 = {self.cuartiles()[1]}"""
 
 class ResumenGrafico():
   """Realiza distintas gráficas que permiten visualizar la distribución estimada
-  de una muestra de datos cuantitativa. 
-  
-  Contiene métodos para estimar la distribución mediante kernel uniforme, 
+  de una muestra de datos cuantitativa.
+
+  Contiene métodos para estimar la distribución mediante kernel uniforme,
   cuadrático, triangular y normal. Permite realizar qqplots de los datos contra
   cuantiles de la distribución normal estándar y exponencial.
 
   Args:
-      datos: vector de observaciones de una variable cuantitativa. 
+      datos: vector de observaciones de una variable cuantitativa.
   """
-  
+
   def __init__(self, datos):
     """Inicializa instancia de la clase ResumenGrafico."""
     self.datos = np.array(datos)
-  
+
   def histograma(self,h: float) -> tuple:
     """Define la función histograma asociada a la muestra de datos ingresada.
 
     Args:
         h (float): ancho de los bins del histograma.
-    
+
     Returns:
         bins (np.ndarray): intervalos de ancho h en la muestra observada.
         densidad (np.ndarray): frecuencia relativa de los datos observados en
-        cada intervalo definido por los bins. 
+        cada intervalo definido por los bins.
     """
     bins = np.arange(min(self.datos),max(self.datos), h)
     frecuencias = np.zeros(len(bins))
@@ -115,11 +115,11 @@ class ResumenGrafico():
 
   def evaluacion_histograma(self,h:float,x:np.ndarray) -> np.ndarray:
     """Evalúa el histograma en un vector ordenado x.
-    
+
     Args:
         h (float): ancho de los bins del histograma.
         x (np.ndarray): vector en el que se evaluará el histograma.
-    
+
     Returns:
         evaluacion_histo (np.ndarray): H(x_i) para cada x_i en el vector x, donde
         H(x) es la función histograma asociada a los datos.
@@ -139,13 +139,13 @@ class ResumenGrafico():
     return evaluacion_histo
 
   def kernel_uniforme(self, h:float, x: np.ndarray) -> np.ndarray:
-    """Estima la densidad de los datos en los puntos del vector x con kernel 
+    """Estima la densidad de los datos en los puntos del vector x con kernel
     uniforme y ancho de ventana h.
-    
+
     Args:
         h (float): ancho de los bins del histograma.
         x (np.ndarray): vector en el que se evaluará el histograma.
-    
+
     Returns:
         densidad (np.ndarray): densidad estimada para cada punto de x.
     """
@@ -159,13 +159,13 @@ class ResumenGrafico():
     return densidad
 
   def kernel_gaussiano(self, h:float, x: np.ndarray) -> np.ndarray:
-    """Estima la densidad de los datos en los puntos del vector x con kernel 
+    """Estima la densidad de los datos en los puntos del vector x con kernel
     gaussiano y ancho de ventana h.
-    
+
     Args:
         h (float): ancho de los bins del histograma.
         x (np.ndarray): vector en el que se evaluará el histograma.
-    
+
     Returns:
         densidad (np.ndarray): densidad estimada para cada punto de x.
     """
@@ -178,13 +178,13 @@ class ResumenGrafico():
     return densidad
 
   def kernel_cuadratico(self, h:float, x: np.ndarray) -> np.ndarray:
-    """Estima la densidad de los datos en los puntos del vector x con kernel 
+    """Estima la densidad de los datos en los puntos del vector x con kernel
     cuadrático y ancho de ventana h.
-    
+
     Args:
         h (float): ancho de los bins del histograma.
         x (np.ndarray): vector en el que se evaluará el histograma.
-    
+
     Returns:
         densidad (np.ndarray): densidad estimada para cada punto de x.
     """
@@ -202,13 +202,13 @@ class ResumenGrafico():
     return densidad
 
   def kernel_triangular(self, h:float, x: np.ndarray) -> np.ndarray:
-    """Estima la densidad de los datos en los puntos del vector x con kernel 
+    """Estima la densidad de los datos en los puntos del vector x con kernel
     triangular y ancho de ventana h.
-    
+
     Args:
         h (float): ancho de los bins del histograma.
         x (np.ndarray): vector en el que se evaluará el histograma.
-    
+
     Returns:
         densidad (np.ndarray): densidad estimada para cada punto de x.
     """
@@ -234,12 +234,14 @@ class ResumenGrafico():
   def mi_densidad(self, h: float, x: np.ndarray, kernel: str) -> np.ndarray:
     """Estima la densidad de los datos en los puntos del vector x con el kernel
     elegido y ancho de ventana h.
-    
+
     Args:
         h (float): ancho de los bins del histograma.
         x (np.ndarray): vector en el que se evaluará el histograma.
         kernel (string): kernel a utilizar.
-    
+        kernel (str): kernel a utilizar para la estimación. Puede ser uniforme,
+        gaussiano, cuadrático o triangular.
+
     Returns:
         densidad (np.ndarray): densidad estimada para cada punto de x con el
         kernel especificado y ancho de ventana h.
@@ -624,20 +626,17 @@ class RegresionLogistica(Regresion):
                   'especificidad': especificidad}
 
     return resultados
-
-  def ROC(self, x_test: np.ndarray, y_test: np.ndarray, mostrar: bool = True) -> float:
-    """Imprime curva ROC del modelo y devuelve los vectores '1 - especificdad'
-    y 'sensibilidad'.
+  
+  def ROC_aux(self, x_test: np.ndarray, y_test: np.ndarray) -> tuple:
+    """Calcula la sensibilidad y especificidad del modelo para distintos 
+    umbrales de clasificación.
 
     Args:
         x_test (np.ndarray): valores independientes de las predictoras.
         y_test (np.ndarray): valores de la variable respuesta observados para
         cada valor de las predictoras en x_test.
-        mostrar (bool): define si imprimir la curva o no.
-
-    Returns:
-        ejes (tuple): tupla con eje x (1 - especificidad) e y (sensibilidad) de
-        la curva ROC.
+    
+    Returns: tupla con vector de sensibilidad y especificidad.
     """
     p = np.linspace(0, 1, 100)
 
@@ -647,13 +646,46 @@ class RegresionLogistica(Regresion):
     for i in range(len(p)):
       sensibilidad[i] = self.matriz_confusion(x_test, y_test, p[i], mostrar = False)['sensibilidad']
       especificidad[i] = self.matriz_confusion(x_test, y_test, p[i], mostrar = False)['especificidad']
+    
+    return sensibilidad, especificidad
 
-    if mostrar == True:
-      plt.plot(1 - especificidad, sensibilidad)
+  def ROC(self, x_test: np.ndarray, y_test: np.ndarray) -> float:
+    """Imprime curva ROC del modelo y devuelve los vectores '1 - especificdad'
+    y 'sensibilidad'.
 
-    ejes = (1 - especificidad, sensibilidad)
+    Args:
+        x_test (np.ndarray): valores independientes de las predictoras.
+        y_test (np.ndarray): valores de la variable respuesta observados para
+        cada valor de las predictoras en x_test.
 
-    return ejes
+    Returns:
+        ejes (tuple): tupla con eje x (1 - especificidad) e y (sensibilidad) de
+        la curva ROC.
+    """
+    sensibilidad, especificidad = self.ROC_aux(x_test, y_test)
+    x, y = 1 - especificidad, sensibilidad
+    plt.plot(x, y)
+
+    return x, y
+  
+  def indice_youden(self, x_test: np.ndarray, y_test: np.ndarray) -> float:
+    """Calcula el punto de corte en el que la sensibilidad y la especificidad
+    del modelo son las mejores.
+    Args:
+        x_test (np.ndarray): valores independientes de las predictoras.
+        y_test (np.ndarray): valores de la variable respuesta observados para
+        cada valor de las predictoras en x_test.
+    Returns:
+        p[ind_j] (float): p que maximiza sensibilidad y especificidad.
+    """
+    p = np.linspace(0, 1, 100)
+
+    sensibilidad, especificidad = self.ROC_aux(x_test, y_test)
+    formula = sensibilidad + especificidad - 1
+
+    ind_j = np.where(formula == max(formula))
+
+    return p[ind_j]
 
   def AUC_modelo(self,  x_test: np.ndarray, y_test: np.ndarray) -> float:
     """Devuelve el área bajo la curva ROC asociada al modelo ajustado.
@@ -666,7 +698,7 @@ class RegresionLogistica(Regresion):
     Returns:
         auc (float): área bajo la curva ROC.
     """
-    x, y = self.ROC(x_test, y_test, False)
+    x, y = self.ROC(x_test, y_test)
     return auc(x, y)
 
   def clasifica_modelo_AUC(self, x_test: np.ndarray, y_test: np.ndarray) -> str:
