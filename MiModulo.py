@@ -8,17 +8,76 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import auc
 from scipy.stats import chi2
 
-class TrainTest():
-  ''' Esta clase separa un conjunto de datos en formato Dataframe en conjuntos
-  para entrenar y testear. El conjunto train contiene un porcentaje p de los datos,
-  test contiene el 1 - p restantes.
-  Argumentos:
-  - data: conjunto de datos,
-  - p: porcentaje de datos para conjunto train,
-  - semilla: opcional, permite definir la semilla de selección de datos.
-  '''
-  def __init__(self, data, p, semilla = 10):
+class ResumenNumerico():
+  """Clase que realiza el resumen numérico de una muestra de una variable
+  cuantitativa. Calcula media, desvío, cuartiles, mínimo y máximo de la misma.
+  Args:
+      datos: vector con las observaciones de la muestra."""
+  def __init__(self, datos):
+    self.datos = datos
 
+  def __str__(self):
+    """Retorno de aplicar print() a un objeto de la clase ResumenNumérico."""
+    resumen = f"""\033[1mResumen numérico de los datos. \033[0m
+Media: {self.media()}
+Desvío estándar: {round(self.desvio(),3)}
+Mínimo: {self.min()}
+Máximo: {self.max()}
+Q1 = {self.cuartiles()[0]}
+Q2/Mediana = {self.mediana()}
+Q3 = {self.cuartiles()[1]}"""
+    return resumen
+
+  def media(self) -> float:
+    """Calcula media de la muestra."""
+    return np.mean(self.datos)
+
+  def desvio(self) -> float:
+    """Calcula desvío de la muestra."""
+    return np.std(self.datos)
+
+  def cuartiles(self):
+    """Halla el cuartil 1 y el cuartil 3 de la muestra.
+    Para cuartil 2 ver el método mediana()"""
+    q1, q3 = np.quantile(self.datos, 0.25), np.quantile(self.datos, 0.75)
+    return [q1, q3]
+
+  def mediana(self):
+    """Devuelve la mediana de la muestra."""
+    return np.median(self.datos)
+
+  def min(self):
+    """Devuelve el mínimo de la muestra."""
+    return min(self.datos)
+
+  def max(self):
+    """Devuelve el máximo de la muestra."""
+    return max(self.datos)
+
+  def resumen(self) -> dict:
+    """Genera y devuelve diccionario con media, desvío, mínimo, máximo y
+    cuartiles de la muestra."""
+    diccionario_resumen = {
+        "Media" : self.media(),
+        "Desvío estándar" : self.desvio(),
+        "Mínimo" : self.min(),
+        "Máximo" : self.max(),
+        "Q1" : self.cuartiles()[0],
+        "Q3" : self.cuartiles()[1],
+        "Mediana" : self.mediana(),
+     }
+    return diccionario_resumen
+
+class TrainTest():
+  """Clase que separa conjunto de datos en conjuntos para entrenar y testear modelos.
+
+  Args:
+      data (pd.Dataframe): conjunto de datos a separar
+      p (float): porcentaje de datos para conjunto de entrenamiento. 0 < p < 1.
+      semilla (int): opcional, permite definir la semilla de selección de datos.
+  """
+  def __init__(self, data: pd.DataFrame, p:float, semilla:int = 10):
+    """Inicializa instancia de la clase TrainTest."""
     random.seed(semilla)
 
     self.indices = random.sample(range(len(data)), int(len(data) * p))
@@ -26,42 +85,56 @@ class TrainTest():
     self.train = data.iloc[self.indices]
     self.test = data.drop(self.indices)
 
-  def train(self):
+  def train(self) -> pd.DataFrame:
+    """Devuelve conjunto de entrenamiento."""
     return self.train
 
-  def test(self):
+  def test(self) -> pd.DataFrame:
+    """Devuelve conjunto de testeo."""
     return self.test
 
 class Regresion():
+  """Realiza cálculos de regresión con librería statmodels.
+
+    Atributos:
+        x (np.ndarray): vector de observaciones de la variable predictora.
+        y (np.ndarray): vector de observaciones de la variable respuesta.
+        X (np.ndarray): matriz de diseño asociada a x."""
 
   def __init__(self, predictoras, respuesta):
+    """Inicializa una instancia de la clase regresión."""
     self.x = predictoras
     self.y = respuesta
     self.X = sm.add_constant(self.x)
 
-  def valores_ajustados(self):
+  def valores_ajustados(self) -> np.ndarray:
+    """Devuelve los valores ajustados del modelo de regresión."""
     return self.resultado.fittedvalues
 
-  def betas(self):
+  def betas(self) -> np.ndarray:
+    """Devuelve las estimaciones de los parámetros asociados a cada predictora."""
     return self.resultado.params
 
-  def se(self):
+  def se(self) -> np.ndarray:
+    """Devuelve los errores estándar asociados a cada beta estimado."""
     return self.resultado.bse
 
-  def t_obs(self):
+  def t_obs(self) -> np.ndarray:
+    """Devuelve el estadístico t observado para cada beta estimado."""
     return self.resultado.tvalues
 
-  def pvalues(self):
+  def pvalues(self) -> np.ndarray:
+    """Devuelve el p-valor asociado a cada beta estimado."""
     return self.resultado.pvalues
 
-
 class RegresionLineal(Regresion):
-  '''Esta clase es una instancia de la clase Regresion y realiza cálculos y gráficos de regresión lineal
-  utilizando las librerías numpy, statsmodels y matplotlib.
+  """Esta clase es una instancia de la clase Regresion y realiza cálculos
+  y gráficos de regresión lineal utilizando las librerías numpy, statsmodels
+  y matplotlib.
 
   Atributos:
   - Modelo (sm.OLS): Modelo de regresión lineal.
-  - '''
+  - """
 
   def __init__(self, predictoras: np.ndarray, respuesta: np.ndarray):
     """ Inicializa una instancia de la clase Regresión Lineal con la librería
@@ -75,7 +148,7 @@ class RegresionLineal(Regresion):
     self.modelo = sm.OLS(self.y, self.X)
     self.resultado = self.modelo.fit()
 
-  def coeficientes_correlacion(self) -> np.ndarray:
+  def coeficientes_correlacion(self):
     """ Devuelve los coeficientes de correlación entre cada variable predictora
     y la variable respuesta.
 
@@ -97,8 +170,8 @@ class RegresionLineal(Regresion):
     return self.resultado.rsquared_adj
 
   def grafico_dispersion(self):
-    '''Realiza un gráfico de dispersión para cada variable predictora.
-    En caso de haber una sola, superpone la recta ajustada.'''
+    """Realiza un gráfico de dispersión para cada variable predictora.
+    En caso de haber una sola, superpone la recta ajustada."""
 
     cant_predictoras = self.x.T.shape[0]
 
@@ -117,26 +190,38 @@ class RegresionLineal(Regresion):
         plt.plot(self.x, self.valores_ajustados())
         plt.show()
 
-  def ECM(self):
-    '''Devuelve el Error Cuadrático Medio del modelo ajustado.'''
-    error_cuadratico_medio = np.sum((self.y - self.valores_ajustados())**2) / len(self.y)
-    return error_cuadratico_medio
-
   def predecir_valor(self, x_new):
-    '''Predice el valor  de la variable respuesta asociado a nuevos valores
+    """Predice el valor  de la variable respuesta asociado a nuevos valores
     de las variables predictoras.
       Args:
             x_new: vector de variables predictoras.
       Returns:
-            np.ndarray: predicciones
-    '''
+            np.ndarray: predicciones.
+    """
     X_new = np.insert(x_new, 0, 1)
     return X_new @ self.betas()
 
+  def ECM(self, x_test: np.ndarray, y_test:np.ndarray) -> float:
+    """Devuelve el error cuadrático medio asociado a una muestra de testeo.
+    Args:
+        x_test (np.ndarray): predictoras para testear.
+        y_test (np.ndarray): valores de la variable respuesta para testear.
+
+    Returns:
+        error_cuadratico_medio (float): estimación del ECM del modelo.
+        """
+    error_cuadratico_medio = np.sum((y_test - self.predecir_valor(x_test))**2) / len(self.y)
+    return error_cuadratico_medio
+
   def intervalos(self, x_new, alfa=0.05, mostrar = True):
-    '''Devuelve intervalos de confianza y de predicción para un valor
+    """Devuelve intervalos de confianza y de predicción para un valor independiente
     de las variables predictoras.
-      Argumentos:'''
+      Args:
+          x_new (np.ndarray): vector con valores independientes de las variables
+          predictoras.
+          alfa (float): número entre 0 y 1 para definir significancia del test.
+          mostrar (bool): si True imprime el intervalo, si no sólo lo devuelve.
+          """
     X_new = np.insert(x_new, 0, 1)
     prediccion = self.resultado.get_prediction(X_new)
 
@@ -156,6 +241,8 @@ class RegresionLineal(Regresion):
     return diferencias
 
   def analisis_residuos(self):
+    """Imprime qqplot normal de los residuos del modelo y un gráfico de
+    dispersión de los mismos versus los valores predichos."""
     residuos = self.resultado.resid
     plt.title("Residuos vs. valores predichos.")
     plt.scatter(self.valores_ajustados(), self.resultado.resid)
