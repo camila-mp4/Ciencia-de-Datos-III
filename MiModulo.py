@@ -97,19 +97,24 @@ class ResumenGrafico():
         densidad (np.ndarray): frecuencia relativa de los datos observados en
         cada intervalo definido por los bins.
     """
-    bins = np.arange(min(self.datos),max(self.datos), h)
+    # generamos vector con extremos de cada intervalo/bin
+    bins = np.arange(min(self.datos),max(self.datos), h) 
+    # generamos vector para almacenar frecuencia de datos en cada bin
     frecuencias = np.zeros(len(bins))
 
-    for i in range(len(bins)):
-      if i+1 == len(bins):
+    for i in range(len(bins)): # recorremos bins
+      if i+1 == len(bins): # si ya recorrimos todos finalizamos el proceso
         break
-      ind_m = np.where(self.datos >= bins[i])
-      ind_M = np.where(self.datos < bins[i+1])
-      ind_bins = np.intersect1d(ind_m, ind_M)
+      # hallamos indices de datos mayores al extremo izquierdo
+      ind_m = np.where(self.datos >= bins[i]) 
+      # hallamos indices de datos menores al extremo derecho
+      ind_M = np.where(self.datos < bins[i+1]) 
+      # intsercamos para dejar solo indices de datos entre ambos extremos
+      ind_bins = np.intersect1d(ind_m, ind_M) 
 
-      frecuencias[i] = len(ind_bins)
+      frecuencias[i] = len(ind_bins) # long de vector de indices = cant de datos en el intervalo
 
-    densidad = frecuencias / (len(self.datos) * h)
+    densidad = frecuencias / (len(self.datos) * h) # hallamos densidad de los datos 
 
     return bins, densidad
 
@@ -124,12 +129,13 @@ class ResumenGrafico():
         evaluacion_histo (np.ndarray): H(x_i) para cada x_i en el vector x, donde
         H(x) es la función histograma asociada a los datos.
     """
-    evaluacion_histo = np.zeros(len(x))
+    evaluacion_histo = np.zeros(len(x)) 
     intervalos, valor = self.histograma(h)
 
     for i in range(len(intervalos)):
       if i+1 == len(intervalos):
         break
+
       x_mayores = np.where(intervalos[i] <= x)
       x_menores = np.where(x < intervalos[i+1])
       indices = np.intersect1d(x_mayores, x_menores)
@@ -365,14 +371,14 @@ class TrainTest():
 
     self.indices = random.sample(range(len(data)), int(len(data) * p))
 
-    self.train = data.iloc[self.indices]
+    self.train = data.iloc[self.indices] 
     self.test = data.drop(self.indices)
 
-  def train(self) -> pd.DataFrame:
+  def datos_train(self) -> pd.DataFrame:
     """Devuelve conjunto de entrenamiento."""
     return self.train
 
-  def test(self) -> pd.DataFrame:
+  def datos_test(self) -> pd.DataFrame:
     """Devuelve conjunto de testeo."""
     return self.test
 
@@ -384,7 +390,7 @@ class Regresion():
         y (np.ndarray): vector de observaciones de la variable respuesta.
         X (np.ndarray): matriz de diseño asociada a x."""
 
-  def __init__(self, predictoras, respuesta):
+  def __init__(self, predictoras: np.ndarray, respuesta: np.ndarray):
     """Inicializa una instancia de la clase regresión."""
     self.x = predictoras
     self.y = respuesta
@@ -410,6 +416,18 @@ class Regresion():
     """Devuelve el p-valor asociado a cada beta estimado."""
     return self.resultado.pvalues
 
+  def design_matrix(self,vector: np.ndarray) -> np.ndarray:
+    """Devuelve matriz de diseño para el vector de observaciones ingresado.
+    Args:
+        vector (np.ndarray): vector con una o más observaciones de una o más 
+        variables predictoras.
+    """
+    if vector.ndim == 0 or vector.ndim == 1: # si es una única observación de una o varias predictoras
+      matriz_diseño = np.insert(vector, 0, 1)
+    else: # si hay más de una observacion
+      matriz_diseño = sm.add_constant(vector, has_constant='add')
+    return matriz_diseño
+
 class RegresionLineal(Regresion):
   """Esta clase es una instancia de la clase Regresion y realiza cálculos
 <<<<<<< HEAD
@@ -426,7 +444,7 @@ class RegresionLineal(Regresion):
 >>>>>>> nueva_rama
 
   def __init__(self, predictoras: np.ndarray, respuesta: np.ndarray):
-    """ Inicializa una instancia de la clase Regresión Lineal con la librería
+    """Inicializa una instancia de la clase Regresión Lineal con la librería
     statsmodels.
 
     Atributos:
@@ -445,7 +463,7 @@ class RegresionLineal(Regresion):
         np.ndarray / float: Coeficientes de correlación entre x e y.
     """
 
-    if self.x.ndim == 1:
+    if self.x.ndim == 1: # si tenemos una sola predictora
       return np.corrcoef(self.x, self.y, rowvar = False)[1,0] # corrcoef para (x_1, y)
     else:
       return np.corrcoef(self.x, self.y, rowvar = False)[len(self.x.T), :len(self.x.T)] # corrcoef para (x_i, y)
@@ -479,7 +497,7 @@ class RegresionLineal(Regresion):
         plt.plot(self.x, self.valores_ajustados())
         plt.show()
 
-  def predecir_valor(self, x_new):
+  def predecir_valor(self, x_new: np.ndarray):
     """Predice el valor  de la variable respuesta asociado a nuevos valores
     de las variables predictoras.
       Args:
@@ -487,7 +505,7 @@ class RegresionLineal(Regresion):
       Returns:
             np.ndarray: predicciones.
     """
-    X_new = np.insert(x_new, 0, 1)
+    X_new = self.design_matrix(x_new)
     return X_new @ self.betas()
 
   def ECM(self, x_test: np.ndarray, y_test:np.ndarray) -> float:
@@ -522,7 +540,7 @@ class RegresionLineal(Regresion):
     X_new = np.insert(x_new, 0, 1)
     prediccion = self.resultado.get_prediction(X_new)
 
-    int_confianza = prediccion.conf_int(alpha=alfa)
+    int_confianza = prediccion.conf_int(alpha = alfa)
     int_prediccion = prediccion.conf_int(obs = True, alpha = alfa)
 
     if mostrar == True:
@@ -552,33 +570,40 @@ class RegresionLogistica(Regresion):
 
   def __init__(self, predictoras, respuesta):
     super().__init__(predictoras, respuesta)
-    self.modelo = sm.Logit(self.y, self.X)
-    self.resultado = self.modelo.fit()
-    self.probabilidades_estimadas = np.e ^ self.valores_ajustados / (np.e ^ self.valores_ajustados + 1)
+    self.modelo = sm.Logit(self.y, self.X);
+    self.resultado = self.modelo.fit();
+    self.probabilidades_estimadas = (np.e ** self.valores_ajustados()) / (np.e ** self.valores_ajustados() + 1)
 
-  def estimar_probabilidad(self, x_test: np.ndarray) -> np.ndarray:
-    """Dado un vector de prueba x_test, estima la probabilidad de que la variable
+  def estimar_probabilidad(self, x_new: np.ndarray) -> np.ndarray:
+    """Dado un vector de prueba x_new, estima la probabilidad de que la variable
     respuesta tome tal valor con el modelo ajustado.
 
     Args:
         x_test (np.ndarray): vector de valores independientes de las predictoras.
     """
-    X_test = sm.add_constant(x_test)
-    exp = X_test @ self.betas
-    probabilidades = np.e ^ exp / (1 + np.e ^ exp)
+
+    # creamos matriz de diseño 
+    X_new = self.design_matrix(x_new) 
+
+    # multiplicamos por los parámetros estimados para hallar exponentes
+    exp = X_new @ self.betas() 
+
+    # evaluamos exponentes en la función logística
+    probabilidades = np.e ** exp / (1 + np.e ** exp) 
     return probabilidades
 
-  def categoriza(self, x_test: np.ndarray, p: float = 0.05) -> np.ndarray:
+  def categoriza(self, x_test: np.ndarray, p: float = 0.5) -> np.ndarray:
     """Dado un umbral p y un vector de prueba x_test, categoriza como 1 aquellas
     probabilidades mayores a p y 0 a las demás.
     Args:
         x_test (np.ndarray): vector de valores independientes de las predictoras.
         p (float): punto de corte para clasificar.
     """
+    # asignamos valor 1 a las probabilidades mayor al umbral elegido, 0 a las demás
     categorizadas = 1 * (self.estimar_probabilidad(x_test) >= p)
     return categorizadas
 
-  def matriz_confusion(self, x_test: np.ndarray, y_test: np.ndarray, p: float = 0.05, mostrar: bool = True) -> dict:
+  def matriz_confusion(self, x_test: np.ndarray, y_test: np.ndarray, p: float = 0.5, mostrar: bool = True) -> dict:
     """Calcula matriz de confusión del modelo ajustado para los datos de prueba
     x_test y el p ingresado.
 
@@ -593,21 +618,24 @@ class RegresionLogistica(Regresion):
         resultados (dict): diccionario con cada entrada de la matriz, especificidad
         y sensibilidad del modelo.
     """
+    # categorizamos los valores predichos para x_test
     y_pred = self.categoriza(x_test, p)
 
-    a = verdaderos_positivos = np.sum((y_pred == 1) & (y_test == 1))
-    b = falsos_positivos = np.sum((y_pred == 1) & (y_test == 0))
-    c = falsos_negativos = np.sum((y_pred == 0) & (y_test == 1))
-    d = verdaderos_negativos = np.sum((y_pred == 0) & (y_test == 0))
+    # comparamos y_pred con y_test para hallar matriz de confusión
+    a = np.sum((y_pred == 1) & (y_test == 1)) # verdaderos positivos
+    b = np.sum((y_pred == 1) & (y_test == 0)) # falsos positivos
+    c = np.sum((y_pred == 0) & (y_test == 1)) # falsos negativos
+    d = np.sum((y_pred == 0) & (y_test == 0)) # verdaderos negativos
 
     tabla =  pd.DataFrame({
     'y_test = 1': [a, c],
     'y_test = 0': [b, d],
-    }, index=['y_pred = 1', 'y_pred = 0'])
+    }, index=['y_pred = 1', 'y_pred = 0']) # creamos matriz como DataFrame
 
+    # calculamos error de mala clasificación, sensibilidad y especificidad
     error_mala_clasificacion = (b + c) / len(y_pred)
-    sensibilidad = a / (a + c)
-    especificidad = d / (b + d)
+    sensibilidad = a / (a + c) # prop. de positivos detectados
+    especificidad = d / (b + d) # prop. de negativos detectados
 
     if mostrar == True:
       print()
@@ -626,30 +654,30 @@ class RegresionLogistica(Regresion):
                   'especificidad': especificidad}
 
     return resultados
-  
+
   def ROC_aux(self, x_test: np.ndarray, y_test: np.ndarray) -> tuple:
-    """Calcula la sensibilidad y especificidad del modelo para distintos 
+    """Calcula la sensibilidad y especificidad del modelo para distintos
     umbrales de clasificación.
 
     Args:
         x_test (np.ndarray): valores independientes de las predictoras.
         y_test (np.ndarray): valores de la variable respuesta observados para
         cada valor de las predictoras en x_test.
-    
+
     Returns: tupla con vector de sensibilidad y especificidad.
     """
-    p = np.linspace(0, 1, 100)
+    p = np.linspace(0, 1, 100) # vector de puntos de corte equiespaciados
 
     sensibilidad = np.zeros(len(p)) # sensibilidad para cada valor de p
     especificidad = np.zeros(len(p)) # especificidad para cada valor de p
 
-    for i in range(len(p)):
+    for i in range(len(p)): # para cada umbral p hallamos sensibilidad y especificidad
       sensibilidad[i] = self.matriz_confusion(x_test, y_test, p[i], mostrar = False)['sensibilidad']
       especificidad[i] = self.matriz_confusion(x_test, y_test, p[i], mostrar = False)['especificidad']
-    
+
     return sensibilidad, especificidad
 
-  def ROC(self, x_test: np.ndarray, y_test: np.ndarray) -> float:
+  def ROC(self, x_test: np.ndarray, y_test: np.ndarray, mostrar = True) -> float:
     """Imprime curva ROC del modelo y devuelve los vectores '1 - especificdad'
     y 'sensibilidad'.
 
@@ -664,10 +692,11 @@ class RegresionLogistica(Regresion):
     """
     sensibilidad, especificidad = self.ROC_aux(x_test, y_test)
     x, y = 1 - especificidad, sensibilidad
-    plt.plot(x, y)
+    if mostrar == True:
+      plt.plot(x, y)
 
     return x, y
-  
+
   def indice_youden(self, x_test: np.ndarray, y_test: np.ndarray) -> float:
     """Calcula el punto de corte en el que la sensibilidad y la especificidad
     del modelo son las mejores.
@@ -683,6 +712,7 @@ class RegresionLogistica(Regresion):
     sensibilidad, especificidad = self.ROC_aux(x_test, y_test)
     formula = sensibilidad + especificidad - 1
 
+    # nos interesa el p en el cual se maximiza la fórmula anterior
     ind_j = np.where(formula == max(formula))
 
     return p[ind_j]
@@ -698,7 +728,7 @@ class RegresionLogistica(Regresion):
     Returns:
         auc (float): área bajo la curva ROC.
     """
-    x, y = self.ROC(x_test, y_test)
+    x, y = self.ROC(x_test, y_test, False)
     return auc(x, y)
 
   def clasifica_modelo_AUC(self, x_test: np.ndarray, y_test: np.ndarray) -> str:
@@ -713,9 +743,9 @@ class RegresionLogistica(Regresion):
         clasificacion (string): cadena con la clasificación asignada al modelo.
     """
 
-    AUC = self.AUC_modelo(x_test, y_test)
+    AUC = self.AUC_modelo(x_test, y_test) # hallamos AUC para clasificar el modelo
 
-    if AUC <= 0.6:
+    if AUC <= 0.6: # utilizamos la clasificación propuesta en clase
       clasificacion = 'Modelo fallido.'
     elif 0.6 < AUC <= 0.7:
       clasificacion = 'Modelo pobre.'
