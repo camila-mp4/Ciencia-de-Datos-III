@@ -98,7 +98,7 @@ class ResumenGrafico():
         cada intervalo definido por los bins.
     """
     # generamos vector con extremos de cada intervalo/bin
-    bins = np.arange(min(self.datos),max(self.datos), h) 
+    bins = np.arange(min(self.datos),max(self.datos), h)
     # generamos vector para almacenar frecuencia de datos en cada bin
     frecuencias = np.zeros(len(bins))
 
@@ -106,15 +106,15 @@ class ResumenGrafico():
       if i+1 == len(bins): # si ya recorrimos todos finalizamos el proceso
         break
       # hallamos indices de datos mayores al extremo izquierdo
-      ind_m = np.where(self.datos >= bins[i]) 
+      ind_m = np.where(self.datos >= bins[i])
       # hallamos indices de datos menores al extremo derecho
-      ind_M = np.where(self.datos < bins[i+1]) 
+      ind_M = np.where(self.datos < bins[i+1])
       # intsercamos para dejar solo indices de datos entre ambos extremos
-      ind_bins = np.intersect1d(ind_m, ind_M) 
+      ind_bins = np.intersect1d(ind_m, ind_M)
 
       frecuencias[i] = len(ind_bins) # long de vector de indices = cant de datos en el intervalo
 
-    densidad = frecuencias / (len(self.datos) * h) # hallamos densidad de los datos 
+    densidad = frecuencias / (len(self.datos) * h) # hallamos densidad de los datos
 
     return bins, densidad
 
@@ -129,7 +129,7 @@ class ResumenGrafico():
         evaluacion_histo (np.ndarray): H(x_i) para cada x_i en el vector x, donde
         H(x) es la función histograma asociada a los datos.
     """
-    evaluacion_histo = np.zeros(len(x)) 
+    evaluacion_histo = np.zeros(len(x))
     intervalos, valor = self.histograma(h)
 
     for i in range(len(intervalos)):
@@ -297,66 +297,6 @@ class ResumenGrafico():
     plt.plot(cuantiles_teoricos,cuantiles_teoricos , linestyle='-', color='red')
     plt.show()
 
-class ResumenNumerico():
-  """Clase que realiza el resumen numérico de una muestra de una variable
-  cuantitativa. Calcula media, desvío, cuartiles, mínimo y máximo de la misma.
-  Args:
-      datos: vector con las observaciones de la muestra."""
-  def __init__(self, datos):
-    self.datos = datos
-
-  def __str__(self):
-    """Retorno de aplicar print() a un objeto de la clase ResumenNumérico."""
-    resumen = f"""\033[1mResumen numérico de los datos. \033[0m
-Media: {self.media()}
-Desvío estándar: {round(self.desvio(),3)}
-Mínimo: {self.min()}
-Máximo: {self.max()}
-Q1 = {self.cuartiles()[0]}
-Q2/Mediana = {self.mediana()}
-Q3 = {self.cuartiles()[1]}"""
-    return resumen
-
-  def media(self) -> float:
-    """Calcula media de la muestra."""
-    return np.mean(self.datos)
-
-  def desvio(self) -> float:
-    """Calcula desvío de la muestra."""
-    return np.std(self.datos)
-
-  def cuartiles(self):
-    """Halla el cuartil 1 y el cuartil 3 de la muestra.
-    Para cuartil 2 ver el método mediana()"""
-    q1, q3 = np.quantile(self.datos, 0.25), np.quantile(self.datos, 0.75)
-    return [q1, q3]
-
-  def mediana(self):
-    """Devuelve la mediana de la muestra."""
-    return np.median(self.datos)
-
-  def min(self):
-    """Devuelve el mínimo de la muestra."""
-    return min(self.datos)
-
-  def max(self):
-    """Devuelve el máximo de la muestra."""
-    return max(self.datos)
-
-  def resumen(self) -> dict:
-    """Genera y devuelve diccionario con media, desvío, mínimo, máximo y
-    cuartiles de la muestra."""
-    diccionario_resumen = {
-        "Media" : self.media(),
-        "Desvío estándar" : self.desvio(),
-        "Mínimo" : self.min(),
-        "Máximo" : self.max(),
-        "Q1" : self.cuartiles()[0],
-        "Q3" : self.cuartiles()[1],
-        "Mediana" : self.mediana(),
-     }
-    return diccionario_resumen
-
 class TrainTest():
   """Clase que separa conjunto de datos en conjuntos para entrenar y testear modelos.
 
@@ -371,7 +311,7 @@ class TrainTest():
 
     self.indices = random.sample(range(len(data)), int(len(data) * p))
 
-    self.train = data.iloc[self.indices] 
+    self.train = data.iloc[self.indices]
     self.test = data.drop(self.indices)
 
   def datos_train(self) -> pd.DataFrame:
@@ -419,7 +359,7 @@ class Regresion():
   def design_matrix(self,vector: np.ndarray) -> np.ndarray:
     """Devuelve matriz de diseño para el vector de observaciones ingresado.
     Args:
-        vector (np.ndarray): vector con una o más observaciones de una o más 
+        vector (np.ndarray): vector con una o más observaciones de una o más
         variables predictoras.
     """
     if vector.ndim == 0 or vector.ndim == 1: # si es una única observación de una o varias predictoras
@@ -430,18 +370,9 @@ class Regresion():
 
 class RegresionLineal(Regresion):
   """Esta clase es una instancia de la clase Regresion y realiza cálculos
-<<<<<<< HEAD
-  y gráficos de regresión lineal utilizando las librerías numpy, statsmodels
-  y matplotlib.
-
-  Atributos:
-  - Modelo (sm.OLS): Modelo de regresión lineal.
-  - """
-=======
   y gráficos para modelos de regresión lineal utilizando las librerías numpy,
   statsmodels y matplotlib.
   """
->>>>>>> nueva_rama
 
   def __init__(self, predictoras: np.ndarray, respuesta: np.ndarray):
     """Inicializa una instancia de la clase Regresión Lineal con la librería
@@ -516,11 +447,7 @@ class RegresionLineal(Regresion):
 
     Returns:
         error_cuadratico_medio (float): estimación del ECM del modelo.
-<<<<<<< HEAD
-        """
-=======
     """
->>>>>>> nueva_rama
     error_cuadratico_medio = np.sum((y_test - self.predecir_valor(x_test))**2) / len(self.y)
     return error_cuadratico_medio
 
@@ -532,11 +459,7 @@ class RegresionLineal(Regresion):
           predictoras.
           alfa (float): número entre 0 y 1 para definir significancia del test.
           mostrar (bool): si True imprime el intervalo, si no sólo lo devuelve.
-<<<<<<< HEAD
-          """
-=======
     """
->>>>>>> nueva_rama
     X_new = np.insert(x_new, 0, 1)
     prediccion = self.resultado.get_prediction(X_new)
 
@@ -582,14 +505,14 @@ class RegresionLogistica(Regresion):
         x_test (np.ndarray): vector de valores independientes de las predictoras.
     """
 
-    # creamos matriz de diseño 
-    X_new = self.design_matrix(x_new) 
+    # creamos matriz de diseño
+    X_new = self.design_matrix(x_new)
 
     # multiplicamos por los parámetros estimados para hallar exponentes
-    exp = X_new @ self.betas() 
+    exp = X_new @ self.betas()
 
     # evaluamos exponentes en la función logística
-    probabilidades = np.e ** exp / (1 + np.e ** exp) 
+    probabilidades = np.e ** exp / (1 + np.e ** exp)
     return probabilidades
 
   def categoriza(self, x_test: np.ndarray, p: float = 0.5) -> np.ndarray:
@@ -756,8 +679,109 @@ class RegresionLogistica(Regresion):
     else:
       clasificacion = 'Modelo excelente.'
 
-<<<<<<< HEAD
-    return curva_ROC, AUC
-=======
     return clasificacion
->>>>>>> nueva_rama
+
+class test_chi2():
+  """Clase que realiza test chi^2 para un vector de probabilidades esperado
+  pi_0 y el vector de probabilidades observado en una muestra.
+
+  Args:
+      pi_0 (np.ndarray): vector de probabilidades esperadas para los datos.
+      muestra (np.ndarray): vector de observaciones o de frecuencias observadas.
+      son_frecuencias (bool): True si el vector ingresado es de frecuencias
+      absolutas observadas, False si es de observaciones (es decir, si registra
+      a que categoría pertenece cada observación registrada.)
+  """
+  def __init__(self, pi_0: np.ndarray, muestra:np.ndarray, son_frecuencias = True):
+    self.pi_0 = pi_0
+    self.son_frecuencias = son_frecuencias
+    self.muestra = muestra
+    self.frec_obs = None
+
+  def frecuencias_observadas(self) -> np.ndarray:
+    """Calcula frecuencias observadas de la muestra."""
+    if self.son_frecuencias: # si la clase se instanció con frecuencias observadas
+      frecuencias =  self.muestra # no es necesario hacer nada
+
+    else: # si se ingresó un vector de observaciones
+      # hallamos todas las categorías observadas
+      categorias = list(set(self.muestra))
+
+      # creamos vector para almacenar frecuencia absoluta de cada categoría
+      frecuencias = np.zeros(len(categorias))
+
+      for i in range(len(categorias)): # recorremos categorías
+        # almacenamos en la posición i la frecuencia de la categoría i
+        frecuencias[i] = sum(self.muestra == categorias[i])
+
+    self.frec_obs = frecuencias
+
+    return frecuencias
+
+  def n(self) -> int:
+    """Devuelve total de observaciones de la muestra."""
+    if self.son_frecuencias:
+      n = sum(self.frecuencias_observadas())
+    else:
+      n = len(self.muestra)
+    return n
+
+  def k(self) -> int:
+    """Devuelve total de categorías involucradas."""
+    if self.son_frecuencias:
+      k = len(self.muestra) # contamos cant. de frecuencias observadas
+    else:
+      k = len(list(set(self.muestra))) # contamos cant. de observaciones distintas
+    return k
+
+  def frecuencias_esperadas(self) -> np.ndarray:
+    """Devuelve frecuencias esperadas para cada categoría según vector pi_0
+    ingresado y total de observaciones."""
+    return self.pi_0 * self.n()
+
+  def estadistico_observado(self) -> float:
+    """Devuelve estadístico observado para el test.
+    """
+    estadistico = np.sum((self.frecuencias_observadas() - self.frecuencias_esperadas())**2 / self.frecuencias_esperadas())
+    return estadistico
+
+  def region_rechazo(self, alfa: float = 0.05) -> float:
+    """Halla el percentil alfa de la distribución chi cuadrado con k grados de
+    libertad.
+    Args:
+        alfa (float): número entre 0 y 1 que define significancia del test."""
+    df = self.k() - 1 # cantidad de categorías - 1
+    percentil = chi2.ppf(1 - alfa, df)
+    return percentil
+
+  def pvalor(self) -> float:
+    """Halla el pvalor del estadístico chi^2 observado."""
+    df = self.k() - 1
+    observado = self.estadistico_observado()
+    return 1 - chi2.cdf(observado, df)
+
+  def test(self, alfa = 0.05) -> bool:
+    """Realiza test de hipótesis para H_0: pi_0 = frec_obs vs H_1: pi_0 != frec_obs.
+    Args:
+        alfa (float): valor entre 0 y 1 que determina significancia del test.
+
+    Returns:
+        hipotesis_nula (bool): conclusión obtenida sobre la hipótesis nula."""
+    estadistico = self.estadistico_observado()
+    percentil = self.region_rechazo()
+    pvalor = self.pvalor()
+
+    print(f"El estadístico observado por el test es {estadistico}.")
+    print(f"Su pvalor es {pvalor}.")
+    print(f"La región de rechazo queda definida por los valores mayores a {percentil}.")
+
+    if estadistico > percentil:
+      print("""El estadístico observado cae en la región de rechazo y por lo tanto
+rechazamos la hipótesis nula.""")
+      hipotesis_nula = False
+
+    else:
+      print("""La evidencia observada no alcanza para rechazar la hipótesis nula.""")
+      hipotesis_nula = True
+
+    return hipotesis_nula
