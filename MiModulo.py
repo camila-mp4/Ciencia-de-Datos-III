@@ -768,7 +768,7 @@ class test_chi2():
     Returns:
         hipotesis_nula (bool): conclusión obtenida sobre la hipótesis nula."""
     estadistico = self.estadistico_observado()
-    percentil = self.region_rechazo()
+    percentil = self.region_rechazo(alfa)
     pvalor = self.pvalor()
 
     print(f"El estadístico observado por el test es {estadistico}.")
