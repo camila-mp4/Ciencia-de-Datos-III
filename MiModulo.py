@@ -1,3 +1,30 @@
+"""
+MiModulo: biblioteca_CDD_III
+
+--------------------------------------
+
+Esta biblioteca otorga herramientas para la realización de ciertos cálculos 
+comunes en la Ciencia de Datos, tales como regresión lineal, regresión logística, 
+test chi2 para variables cualitativas, etc.
+
+- Clase ResumenNumérico: dado un conjunto de datos numéricos devuelve estadísticos 
+observados en el mismo, tales como la media, el desvío estándar, entre otros.
+- Clase ResumenGráfico: dado un conjunto de observaciones de una variable cuantitativa 
+halla su histograma y estima su densidad por kernels.
+- Clase TrainTest: dado un conjunto de datos, lo separa en conjuntos para entrenar 
+y testear un modelo, permitiendo especificar el porcentaje de datos que formarán 
+cada conjunto y la semilla utilizada.
+- Clase Regresión: clase básica para modelos de regresión.
+- Clase RegresiónLineal: clase que hereda de Regresión y realiza cálculos de 
+regresión lineal simple y múltiple con la librería statmodels.
+- Clase RegresiónLogística: clase que hereda de Regresión y realiza cálculo de 
+regresión logística con librería statmodels.
+- Clase test_chi2: clase que, dado un vector de probabilidades teórico y muestra 
+de observaciones de una variable cualitativa, realiza test chi2 para determinar 
+si la muestra sigue la distribución de probabilidad propuesta.
+
+"""
+
 import random
 
 import numpy as np
@@ -144,7 +171,7 @@ class ResumenGrafico():
 
     return evaluacion_histo
 
-  def kernel_uniforme(self, h:float, x: np.ndarray) -> np.ndarray:
+  def _kernel_uniforme(self, h:float, x: np.ndarray) -> np.ndarray:
     """Estima la densidad de los datos en los puntos del vector x con kernel
     uniforme y ancho de ventana h.
 
@@ -164,7 +191,7 @@ class ResumenGrafico():
 
     return densidad
 
-  def kernel_gaussiano(self, h:float, x: np.ndarray) -> np.ndarray:
+  def _kernel_gaussiano(self, h:float, x: np.ndarray) -> np.ndarray:
     """Estima la densidad de los datos en los puntos del vector x con kernel
     gaussiano y ancho de ventana h.
 
@@ -183,7 +210,7 @@ class ResumenGrafico():
 
     return densidad
 
-  def kernel_cuadratico(self, h:float, x: np.ndarray) -> np.ndarray:
+  def _kernel_cuadratico(self, h:float, x: np.ndarray) -> np.ndarray:
     """Estima la densidad de los datos en los puntos del vector x con kernel
     cuadrático y ancho de ventana h.
 
@@ -207,7 +234,7 @@ class ResumenGrafico():
 
     return densidad
 
-  def kernel_triangular(self, h:float, x: np.ndarray) -> np.ndarray:
+  def _kernel_triangular(self, h:float, x: np.ndarray) -> np.ndarray:
     """Estima la densidad de los datos en los puntos del vector x con kernel
     triangular y ancho de ventana h.
 
@@ -254,16 +281,16 @@ class ResumenGrafico():
     """
     density = np.zeros(len(x))
     if kernel == 'uniforme':
-      density = self.kernel_uniforme(h,x)
+      density = self._kernel_uniforme(h,x)
 
     if kernel == 'gaussiano':
-      density = self.kernel_gaussiano(h,x)
+      density = self._kernel_gaussiano(h,x)
 
     if kernel == 'cuadrático':
-      density = self.kernel_cuadratico(h,x)
+      density = self._kernel_cuadratico(h,x)
 
     if kernel == 'triangular':
-      density = self.kernel_triangular(h,x)
+      density = self._kernel_triangular(h,x)
 
     density = density / (len(self.datos) * h)
     return density
@@ -578,7 +605,7 @@ class RegresionLogistica(Regresion):
 
     return resultados
 
-  def ROC_aux(self, x_test: np.ndarray, y_test: np.ndarray) -> tuple:
+  def _ROC_aux(self, x_test: np.ndarray, y_test: np.ndarray) -> tuple:
     """Calcula la sensibilidad y especificidad del modelo para distintos
     umbrales de clasificación.
 
@@ -600,7 +627,7 @@ class RegresionLogistica(Regresion):
 
     return sensibilidad, especificidad
 
-  def ROC(self, x_test: np.ndarray, y_test: np.ndarray, mostrar = True) -> float:
+  def ROC(self, x_test: np.ndarray, y_test: np.ndarray) -> tuple:
     """Imprime curva ROC del modelo y devuelve los vectores '1 - especificdad'
     y 'sensibilidad'.
 
@@ -613,12 +640,15 @@ class RegresionLogistica(Regresion):
         ejes (tuple): tupla con eje x (1 - especificidad) e y (sensibilidad) de
         la curva ROC.
     """
-    sensibilidad, especificidad = self.ROC_aux(x_test, y_test)
+    sensibilidad, especificidad = self._ROC_aux(x_test, y_test)
     x, y = 1 - especificidad, sensibilidad
-    if mostrar == True:
-      plt.plot(x, y)
 
     return x, y
+  
+  def curva_ROC(self, x_test: np.ndarray, y_test: np.ndarray):
+    """Imprime curva ROC."""
+    x, y = self.ROC(x_test, y_test)
+    plt.plot(x, y)
 
   def indice_youden(self, x_test: np.ndarray, y_test: np.ndarray) -> float:
     """Calcula el punto de corte en el que la sensibilidad y la especificidad
